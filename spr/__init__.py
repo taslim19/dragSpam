@@ -5,6 +5,8 @@ from aiohttp import ClientSession
 from pyrogram import Client
 from Python_ARQ import ARQ
 
+import asyncio  # Needed to create a running event loop
+
 SESSION_NAME = "spr"
 DB_NAME = "db.sqlite3"
 API_ID = 6
@@ -16,9 +18,17 @@ if exists("config.py"):
 else:
     from sample_config import *
 
-session = ClientSession()
+# Async setup function for session and ARQ
+arq = None
+session = None
 
-arq = ARQ(ARQ_API_URL, ARQ_API_KEY, session)
+async def setup_arq():
+    global session, arq
+    session = ClientSession()
+    arq = ARQ(ARQ_API_URL, ARQ_API_KEY, session)
+
+# Run setup before using ARQ
+asyncio.get_event_loop().run_until_complete(setup_arq())
 
 conn = connect(DB_NAME)
 
@@ -28,6 +38,7 @@ spr = Client(
     api_id=API_ID,
     api_hash=API_HASH,
 )
+
 with spr:
     bot = spr.get_me()
     BOT_ID = bot.id
